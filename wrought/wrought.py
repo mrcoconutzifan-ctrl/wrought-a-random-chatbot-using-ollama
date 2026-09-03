@@ -1,7 +1,7 @@
 import sys
 import io
 import ollama
-
+print('Python scripting feature is not very good right now.')
 responses = []
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -29,7 +29,8 @@ thetools = [
         'type': 'function',
         'function': {
             'name': 'execute_python_code',
-            'description': 'Executes Python code and returns output.',
+            'description': ''''Executes Python code and returns output.
+Always print the output when using this and define your own functions, please.''',
             'parameters': {
                 'type': 'object',
                 'properties': {
@@ -86,6 +87,3 @@ Only execute python code(execute_python_code) when asked to.Else, use send_messa
                 reply= tool["function"]["arguments"]["text"]
                 print(reply)
                 responses.append([reply, prompt])
-
-    
-    
