@@ -13,6 +13,14 @@ if hasattr(sys.stdin, 'reconfigure'):
 elif hasattr(sys.stdin, 'buffer'):
     sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', errors='replace')
 def execute_python_code(code: str) -> str:
+    code = code.strip()
+    if code.startswith("```python"):
+        code = code[9:]
+    elif code.startswith("```"):
+        code = code[3:]
+    if code.endswith("```"):
+        code = code[:-3]
+    code = code.strip()
     orgstdout = sys.stdout
     buffer = io.StringIO()
     sys.stdout = buffer
@@ -30,7 +38,9 @@ thetools = [
         'function': {
             'name': 'execute_python_code',
             'description': ''''Executes Python code and returns output.
-Always print the output when using this and define your own functions, please.''',
+Always print the output when using this and define your own functions, please.
+DO NOT use markdown triple backticks. Just give the raw code
+''',
             'parameters': {
                 'type': 'object',
                 'properties': {
@@ -86,4 +96,8 @@ Only execute python code(execute_python_code) when asked to.Else, use send_messa
             elif tool["function"]["name"] == "send_message":
                 reply= tool["function"]["arguments"]["text"]
                 print(reply)
-                responses.append([reply, prompt])
+                responses.append({'AI\'s reply':reply, 'prompt':prompt})
+
+    
+    
+
