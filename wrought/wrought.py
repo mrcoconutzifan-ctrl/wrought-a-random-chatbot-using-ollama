@@ -38,8 +38,9 @@ thetools = [
         'type': 'function',
         'function': {
             'name': 'execute_python_code',
-            'description': ''''Executes Python code and returns output.
+            'description': ''''Executes a SELF-CONTAINED Python script.
 Always print the output when using this and define your own functions, please.
+and imports inside the script every time. Do not reference undefined functions.
 DO NOT use markdown triple backticks. Just give the raw code
 ''',
             'parameters': {
