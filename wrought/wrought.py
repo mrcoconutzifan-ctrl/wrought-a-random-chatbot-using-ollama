@@ -1,6 +1,7 @@
 import sys
 import io
 import ollama
+execution_globals = {}
 print('Python scripting feature is not very good right now.')
 responses = []
 if hasattr(sys.stdout, 'reconfigure'):
@@ -25,7 +26,7 @@ def execute_python_code(code: str) -> str:
     buffer = io.StringIO()
     sys.stdout = buffer
     try:
-        exec(code)
+        exec(code,execution_globals)
         output = buffer.getvalue()
         return output if output else "[done - no printed output]"
     except Exception as e:
@@ -66,38 +67,56 @@ DO NOT use markdown triple backticks. Just give the raw code
                 'required': ['text'],
             },
         },
-    }
+    },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'end_conversation',
+            'description': 'End the conversation',
+            'parameters': {
+                'type':'object'
+                },
+                'required': [],
+            },
+        },
+    
     
 ]
-while True:
-    prompt = input('>> ')
-    response = ollama.chat(
-    tools = thetools,
-    options={'temperature': 0.7},
-    model="llama3.1",
-    messages=[{"role": "system", "content": """
+messagel = [{"role": "system", "content": """
 You are an AI named Wrought.
 Start the chat immediately without booting or initializing messages.
 Try to make your messages very short and use only lowercase letters.
 Only execute python code(execute_python_code) when asked to.Else, use send_message.
-"""},{"role": "system","content": f'previous messages: {responses}'},
-{"role": "user",
-"content": prompt},],
+Use end_conversation when asked to exit or end the conversation
+"""},]
+while True:
+    prompt = input('>> ')
+    messagel.append({"role": "user", "content": prompt})
+    response = ollama.chat(
+    tools = thetools,
+    options={'temperature': 0.7},
+    model="llama3.1",
+    messages=messagel,
 )
     msg = response['message']
     if msg.get("tool_calls"):
+        messagel.append(msg)
         for tool in msg["tool_calls"]:
             if tool["function"]["name"] == "execute_python_code":
                 code = tool["function"]["arguments"]["code"]
                 print(f"[executing code... ]")
                 output = execute_python_code(code)
                 print(f"output: {output}\n")
-                responses.append([f"executed code: {code} -> output: {output}", prompt])
+                messagel.append({
+                    "role": "tool",
+                    "content": str(output),
+                })
             elif tool["function"]["name"] == "send_message":
-                reply= tool["function"]["arguments"]["text"]
+                reply = tool["function"]["arguments"]["text"]
                 print(reply)
-                responses.append({'AI\'s reply':reply, 'prompt':prompt})
-
-    
-    
-
+            elif tool["function"]["name"] == "end_conversation":
+                sys.exit(0)
+    else:
+        if msg.get("content"):
+            print(msg["content"])
+            messagel.append(msg)
